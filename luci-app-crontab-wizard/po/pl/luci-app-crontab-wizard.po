@@ -1,0 +1,104 @@
+msgid "Graphical Crontab Configurator"
+msgstr "Graficzny konfigurator crontab"
+
+msgid "Crontab Configurator"
+msgstr "Konfigurator crontab"
+
+msgid "Minute"
+msgstr "Minuta"
+
+msgid "Hour"
+msgstr "Godzina"
+
+msgid "Day"
+msgstr "Dzień"
+
+msgid "Month"
+msgstr "Miesiąc"
+
+msgid "Weekday"
+msgstr "Dzień tygodnia"
+
+msgid "Command to execute:"
+msgstr "Polecenie do wykonania:"
+
+msgid "Command preview:"
+msgstr "Wizualizacja polecenia:"
+
+msgid "Generated cron command:"
+msgstr "Wygenerowane polecenie cron:"
+
+msgid "Move to crontab"
+msgstr "Przenieś do crontab"
+
+msgid "Reset all changes made"
+msgstr "Resetuj wszystkie wprowadzone zmiany"
+
+msgid "every specified minute period"
+msgstr "co podany okres minut"
+
+msgid "every specified hour period"
+msgstr "co podany okres godzin"
+
+msgid "every specified day"
+msgstr "co podany okres dni"
+
+msgid "January"
+msgstr "Styczeń"
+
+msgid "February"
+msgstr "Luty"
+
+msgid "March"
+msgstr "Marzec"
+
+msgid "April"
+msgstr "Kwiecień"
+
+msgid "May"
+msgstr "Maj"
+
+msgid "June"
+msgstr "Czerwiec"
+
+msgid "July"
+msgstr "Lipiec"
+
+msgid "August"
+msgstr "Sierpień"
+
+msgid "September"
+msgstr "Wrzesień"
+
+msgid "October"
+msgstr "Październik"
+
+msgid "November"
+msgstr "Listopad"
+
+msgid "December"
+msgstr "Grudzień"
+
+msgid "Sunday"
+msgstr "Niedziela"
+
+msgid "Monday"
+msgstr "Poniedziałek"
+
+msgid "Tuesday"
+msgstr "Wtorek"
+
+msgid "Wednesday"
+msgstr "Środa"
+
+msgid "Thursday"
+msgstr "Czwartek"
+
+msgid "Friday"
+msgstr "Piątek"
+
+msgid "Saturday"
+msgstr "Sobota"
+
+msgid "A super simple graphical configurator for crontab."
+msgstr "Bardzo prosty graficzny konfigurator dla crontab."
