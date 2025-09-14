@@ -1,2 +1,29 @@
 # luci-app-crontab-wizard
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/4IceG/luci-app-crontab-wizard?style=flat-square)
+![GitHub stars](https://img.shields.io/github/stars/4IceG/luci-app-crontab-wizard?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/4IceG/luci-app-crontab-wizard?style=flat-square)
+![GitHub All Releases](https://img.shields.io/github/downloads/4IceG/luci-app-crontab-wizard/total)
+
+> [!NOTE]
+> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> 
 Super simple graphical configurator for crontab.
+>
+> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Bardzo prosty graficzny konfigurator dla crontab.
+
+> [!IMPORTANT]
+> ***Due to the layout, the package is dedicated to the luci-theme-bootstrap.***
+> 
+> ***Ze względu na układ pakiet dedykowany jest dla motywu luci-theme-bootstrap.***
+
+> [!IMPORTANT]
+> ***Package was created on a development version, so it may or may not work on older versions of OpenWrt.***
+> 
+> ***Pakiet tworzony był na wersji rozwojowej, dlatego może działać, ale nie musi na starszych wydaniach OpenWrt.***
+
+### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Design concept / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Koncepcja wyglądu
+
+> Configuration window / Okno konfiguracji:
+
+![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/Crontab_wizard.png?raw=true)
+
+## Publication coming soon...
