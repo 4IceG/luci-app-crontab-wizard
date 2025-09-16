@@ -15,11 +15,6 @@ Super simple graphical configurator for crontab.
 > 
 > ***Ze względu na układ pakiet dedykowany jest dla motywu luci-theme-bootstrap.***
 
-> [!IMPORTANT]
-> ***Package was created on a development version, so it may or may not work on older versions of OpenWrt.***
-> 
-> ***Pakiet tworzony był na wersji rozwojowej, dlatego może działać, ale nie musi na starszych wydaniach OpenWrt.***
-
 ### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Design concept / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Koncepcja wyglądu
 
 > Configuration window / Okno konfiguracji:
