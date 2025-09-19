@@ -3,6 +3,7 @@
 'require form';
 'require ui';
 'require view';
+'require fs';
 'require tools.widgets as widgets';
 
 /*
@@ -12,6 +13,10 @@
   MIT License
   
 */
+
+function popTimeout(a, message, timeout, severity) {
+    ui.addTimeLimitedNotification(a, message, timeout, severity)
+}
 
 return view.extend({
   colors: {
@@ -41,7 +46,7 @@ return view.extend({
     return isDarkMode ? '#ffffff' : '#111111';
   },
 
-  addStyles: function() {
+    addStyles: function() {
     const style = document.createElement('style');
     style.type = 'text/css';
     style.textContent = `
@@ -200,30 +205,55 @@ return view.extend({
   },
 
   updateCronPreview: function() {
-    let minute = this.generateCronValues('minute_select', 'minute_checkbox', true);
-    let hour = this.generateCronValues('hour_select', 'hour_checkbox', true);
-    let day = this.generateCronValues('day_select', 'day_checkbox', true);
-    let month = this.generateCronValues('month_select');
+    const minuteCb   = document.getElementById('minute_checkbox');
+    const hourCb     = document.getElementById('hour_checkbox');
+    const dayCb      = document.getElementById('day_checkbox');
+    const cmdInput   = document.getElementById('cron_command_input');
+
+    let minute  = this.generateCronValues('minute_select',  'minute_checkbox',  true);
+    let hour    = this.generateCronValues('hour_select',    'hour_checkbox',    true);
+    let day     = this.generateCronValues('day_select',     'day_checkbox',     true);
+    let month   = this.generateCronValues('month_select');
     let weekday = this.generateCronValues('weekday_select');
-    let command = document.getElementById('cron_command_input').value || '';
+    let command = cmdInput ? (cmdInput.value || '') : '';
 
-    let isMinuteChanged = minute !== '*';
-    let isHourChanged = hour !== '*';
-    let isDayChanged = day !== '*';
-    let isMonthChanged = month !== '*';
-    let isWeekdayChanged = weekday !== '*';
-    let isCommandChanged = command !== '';
+    if (minuteCb && minuteCb.checked) {
+      minute  = this.generateCronValues('minute_select', 'minute_checkbox', true);
+      hour    = '*';
+      day     = '*';
+      month   = '*';
+      weekday = '*';
+    } else if (hourCb && hourCb.checked) {
+      minute  = '*';
+      hour    = this.generateCronValues('hour_select', 'hour_checkbox', true);
+      day     = '*';
+      month   = '*';
+      weekday = '*';
+    } else if (dayCb && dayCb.checked) {
+      minute  = '*';
+      hour    = '*';
+      day     = this.generateCronValues('day_select', 'day_checkbox', true);
+      month   = '*';
+      weekday = '*';
+    }
 
-    let colors = this.getCurrentColors();
+    const isMinuteChanged  = minute  !== '*';
+    const isHourChanged    = hour    !== '*';
+    const isDayChanged     = day     !== '*';
+    const isMonthChanged   = month   !== '*';
+    const isWeekdayChanged = weekday !== '*';
+    const isCommandChanged = command !== '';
+
+    const colors = this.getCurrentColors();
 
     let cronHtml = '';
-    cronHtml += isMinuteChanged ? this.badge(colors.minute, minute) : minute;
+    cronHtml += isMinuteChanged  ? this.badge(colors.minute,  minute)  : minute;
     cronHtml += ' ';
-    cronHtml += isHourChanged ? this.badge(colors.hour, hour) : hour;
+    cronHtml += isHourChanged    ? this.badge(colors.hour,    hour)    : hour;
     cronHtml += ' ';
-    cronHtml += isDayChanged ? this.badge(colors.day, day) : day;
+    cronHtml += isDayChanged     ? this.badge(colors.day,     day)     : day;
     cronHtml += ' ';
-    cronHtml += isMonthChanged ? this.badge(colors.month, month) : month;
+    cronHtml += isMonthChanged   ? this.badge(colors.month,   month)   : month;
     cronHtml += ' ';
     cronHtml += isWeekdayChanged ? this.badge(colors.weekday, weekday) : weekday;
     cronHtml += ' ';
@@ -231,21 +261,64 @@ return view.extend({
 
     document.getElementById('cron_preview').innerHTML = cronHtml;
 
-    let plainCronCommand = minute + ' ' + hour + ' ' + day + ' ' + month + ' ' + weekday + ' ' + command;
-    document.getElementById('cron_preview_text').value = plainCronCommand;
+    const plain = minute + ' ' + hour + ' ' + day + ' ' + month + ' ' + weekday + ' ' + command;
+    document.getElementById('cron_preview_text').value = plain;
   },
 
-  // Generate select options
+  appendCronLine: function() {
+    const input = document.getElementById('cron_preview_text');
+    if (!input) {
+      ui.addNotification(null, E('p', _('Please enter the command')), 'info');
+      return;
+    }
+
+    const cronLine = (input.value || '').trim();
+    const isDefault = cronLine === '* * * * *' || cronLine === '';
+    const parts = cronLine.split(/\s+/);
+
+    if (isDefault) {
+      ui.addNotification(null, E('p', _('Check the cron entry, it must contain (time + command)')), 'info');
+      return;
+    }
+    if (parts.length < 6) {
+      ui.addNotification(null, E('p', _('Please enter the command')), 'info');
+      return;
+    }
+
+    return fs.read('/etc/crontabs/root').then((content) => {
+      let current = (content || '').replace(/\r\n/g, '\n');
+
+      const haystack = '\n' + current + (current.endsWith('\n') ? '' : '\n');
+      const needle   = '\n' + cronLine + '\n';
+      if (haystack.indexOf(needle) !== -1) {
+        ui.addNotification(null, E('p', _('This entry already exists in cron') + ': ' + cronLine));
+        return Promise.resolve('duplicate');
+      }
+
+      if (!current.endsWith('\n') && current.length > 0)
+        current += '\n';
+      current += cronLine + '\n';
+
+      return fs.write('/etc/crontabs/root', current).then(() => 'written');
+    }).then((state) => {
+      if (state === 'duplicate') return;
+
+      return fs.exec('/etc/init.d/cron', ['restart']).then(() => {
+        popTimeout(null, E('p', _('Added entry to cron') + ': ' + cronLine), 5000, 'info');
+      });
+    }).catch((e) => {
+      ui.addNotification(null, E('p', _('Error: %s').format(e.message)));
+    });
+  },
+
   generateOptions: function(start, end, labels) {
     let options = [E('option', { value: '*' }, '*')];
     
     if (labels) {
-      // months, weekdays
       for (let i = 0; i < labels.length; i++) {
         options.push(E('option', { value: (start + i).toString() }, labels[i]));
       }
     } else {
-      // numeric
       for (let i = start; i <= end; i++) {
         options.push(E('option', { value: i.toString() }, i.toString()));
       }
@@ -261,111 +334,111 @@ return view.extend({
 
     return E('div', { class:'cbi-map' }, [
       E('h4', {}, [ _('Graphical Crontab Configurator') ]),
-        E('div', { 'class': 'cbi-section-descr fade-in' }, [_('A super simple graphical configurator for crontab.') ]),
+      E('div', { 'class': 'cbi-section-descr fade-in' }, [_('A super simple graphical configurator for crontab.') ]),
 
-        E('div', { 'style': 'display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));margin-bottom:1em;gap:1em' }, [
-          // Minute
-          E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
-            E('div', { 'class': 'ifacebox-head cron-minute-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Minute') ]),
-            E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
-              E('select', {
-                'id': 'minute_select',
-                'class': 'cbi-input-select',
-                'style': 'width:100%; margin-bottom:8px',
+      E('div', { 'style': 'display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));margin-bottom:1em;gap:1em' }, [
+        // Minute
+        E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
+          E('div', { 'class': 'ifacebox-head cron-minute-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Minute') ]),
+          E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
+            E('select', {
+              'id': 'minute_select',
+              'class': 'cbi-input-select',
+              'style': 'width:100%; margin-bottom:8px',
+              'change': ui.createHandlerFn(this, 'updateCronPreview')
+            }, this.generateOptions(0, 59)),
+            E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
+              E('input', { 
+                'type': 'checkbox', 
+                'id': 'minute_checkbox',
                 'change': ui.createHandlerFn(this, 'updateCronPreview')
-              }, this.generateOptions(0, 59)),
-              E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
-                E('input', { 
-                  'type': 'checkbox', 
-                  'id': 'minute_checkbox',
-                  'change': ui.createHandlerFn(this, 'updateCronPreview')
-                }),
-                E('label', { 'for': 'minute_checkbox', 'style': 'font-size:12px' }, _('every specified minute period'))
-              ])
-            ])
-          ]),
-
-          // Hour
-          E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
-            E('div', { 'class': 'ifacebox-head cron-hour-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Hour') ]),
-            E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
-              E('select', {
-                'id': 'hour_select',
-                'class': 'cbi-input-select',
-                'style': 'width:100%; margin-bottom:8px',
-                'change': ui.createHandlerFn(this, 'updateCronPreview')
-              }, this.generateOptions(0, 23)),
-              E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
-                E('input', { 
-                  'type': 'checkbox', 
-                  'id': 'hour_checkbox',
-                  'change': ui.createHandlerFn(this, 'updateCronPreview')
-                }),
-                E('label', { 'for': 'hour_checkbox', 'style': 'font-size:12px' }, _('every specified hour period'))
-              ])
-            ])
-          ]),
-
-          // Day
-          E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
-            E('div', { 'class': 'ifacebox-head cron-day-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Day') ]),
-            E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
-              E('select', {
-                'id': 'day_select',
-                'class': 'cbi-input-select',
-                'style': 'width:100%; margin-bottom:8px',
-                'change': ui.createHandlerFn(this, 'updateCronPreview')
-              }, this.generateOptions(1, 31)),
-              E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
-                E('input', { 
-                  'type': 'checkbox', 
-                  'id': 'day_checkbox',
-                  'change': ui.createHandlerFn(this, 'updateCronPreview')
-                }),
-                E('label', { 'for': 'day_checkbox', 'style': 'font-size:12px' }, _('every specified day'))
-              ])
-            ])
-          ]),
-
-          // Month
-          E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
-            E('div', { 'class': 'ifacebox-head cron-month-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Month') ]),
-            E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
-              E('select', {
-                'id': 'month_select',
-                'class': 'cbi-input-select',
-                'style': 'width:100%',
-                'change': ui.createHandlerFn(this, 'updateCronPreview')
-              }, this.generateOptions(1, 12, [
-                _('January'), _('February'), _('March'), _('April'), _('May'), _('June'),
-                _('July'), _('August'), _('September'), _('October'), _('November'), _('December')
-              ]))
-            ])
-          ]),
-
-          // Weekday
-          E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
-            E('div', { 'class': 'ifacebox-head cron-weekday-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Weekday') ]),
-            E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
-              E('select', {
-                'id': 'weekday_select',
-                'class': 'cbi-input-select',
-                'style': 'width:100%',
-                'change': ui.createHandlerFn(this, 'updateCronPreview')
-              }, this.generateOptions(0, 6, [
-                _('Sunday'), _('Monday'), _('Tuesday'), _('Wednesday'), _('Thursday'), _('Friday'), _('Saturday')
-              ]))
+              }),
+              E('label', { 'for': 'minute_checkbox', 'style': 'font-size:12px' }, _('every specified minute period'))
             ])
           ])
         ]),
 
-        E('label', { 'style': 'font-weight:bold; display:block; margin-bottom:5px;' }, _('Command to execute:')),
-        E('input', {
-          'id': 'cron_command_input',
-          'class': 'cbi-input-text',
-          'style': 'width:100%; margin-bottom:10px; text-align:center;',
-          'blur': ui.createHandlerFn(this, 'updateCronPreview')
-        }),
+        // Hour
+        E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
+          E('div', { 'class': 'ifacebox-head cron-hour-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Hour') ]),
+          E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
+            E('select', {
+              'id': 'hour_select',
+              'class': 'cbi-input-select',
+              'style': 'width:100%; margin-bottom:8px',
+              'change': ui.createHandlerFn(this, 'updateCronPreview')
+            }, this.generateOptions(0, 23)),
+            E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
+              E('input', { 
+                'type': 'checkbox', 
+                'id': 'hour_checkbox',
+                'change': ui.createHandlerFn(this, 'updateCronPreview')
+              }),
+              E('label', { 'for': 'hour_checkbox', 'style': 'font-size:12px' }, _('every specified hour period'))
+            ])
+          ])
+        ]),
+
+        // Day
+        E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
+          E('div', { 'class': 'ifacebox-head cron-day-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Day') ]),
+          E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
+            E('select', {
+              'id': 'day_select',
+              'class': 'cbi-input-select',
+              'style': 'width:100%; margin-bottom:8px',
+              'change': ui.createHandlerFn(this, 'updateCronPreview')
+            }, this.generateOptions(1, 31)),
+            E('div', { 'style': 'display:flex; align-items:center; gap:5px' }, [
+              E('input', { 
+                'type': 'checkbox', 
+                'id': 'day_checkbox',
+                'change': ui.createHandlerFn(this, 'updateCronPreview')
+              }),
+              E('label', { 'for': 'day_checkbox', 'style': 'font-size:12px' }, _('every specified day'))
+            ])
+          ])
+        ]),
+
+        // Month
+        E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
+          E('div', { 'class': 'ifacebox-head cron-month-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Month') ]),
+          E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
+            E('select', {
+              'id': 'month_select',
+              'class': 'cbi-input-select',
+              'style': 'width:100%',
+              'change': ui.createHandlerFn(this, 'updateCronPreview')
+            }, this.generateOptions(1, 12, [
+              _('January'), _('February'), _('March'), _('April'), _('May'), _('June'),
+              _('July'), _('August'), _('September'), _('October'), _('November'), _('December')
+            ]))
+          ])
+        ]),
+
+        // Weekday
+        E('div', { 'class': 'ifacebox', 'style': 'margin:.25em;width:100%' }, [
+          E('div', { 'class': 'ifacebox-head cron-weekday-head', 'style': 'font-weight:bold;padding:8px;color:#ffffff;' }, [ _('Weekday') ]),
+          E('div', { 'class': 'ifacebox-body', 'style': 'padding:8px' }, [
+            E('select', {
+              'id': 'weekday_select',
+              'class': 'cbi-input-select',
+              'style': 'width:100%',
+              'change': ui.createHandlerFn(this, 'updateCronPreview')
+            }, this.generateOptions(0, 6, [
+              _('Sunday'), _('Monday'), _('Tuesday'), _('Wednesday'), _('Thursday'), _('Friday'), _('Saturday')
+            ]))
+          ])
+        ])
+      ]),
+
+      E('label', { 'style': 'font-weight:bold; display:block; margin-bottom:5px;' }, _('Command to execute:')),
+      E('input', {
+        'id': 'cron_command_input',
+        'class': 'cbi-input-text',
+        'style': 'width:100%; margin-bottom:10px; text-align:center;',
+        'blur': ui.createHandlerFn(this, 'updateCronPreview')
+      }),
 
       E('div', { 'style': 'margin-top:1em;' }, [
         E('label', { 'style': 'font-weight:bold; display:block; margin-bottom:5px;' }, _('Command preview:')),
@@ -382,14 +455,17 @@ return view.extend({
           'class': 'cbi-input-text',
           'style': 'width:100%; margin-bottom:10px; font-family:monospace;',
           'readonly': true,
-          'placeholder': _('Cron command for copying'),
+          'data-tooltip': _('Cron command for copying'),
           'value': '* * * * * '
         })
       ]),
 
       // BUTTONS
       E('div', { 'class': 'cron-actions' }, [
-
+        E('button', {
+          'class': 'cbi-button cbi-button-positive',
+          'click': ui.createHandlerFn(this, 'appendCronLine')
+        }, _('Add to cron')),
         E('button', {
           'class': 'cbi-button cbi-button-neutral',
           'click': ui.createHandlerFn(this, function(){
@@ -410,7 +486,7 @@ return view.extend({
 
             this.updateCronPreview();
           })
-        }, _('Reset all changes made'))
+        }, _('Reset changes'))
       ])
     ]);
   },

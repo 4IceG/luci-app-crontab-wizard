@@ -11,8 +11,8 @@ LUCI_TITLE:=Crontab configurator for LuCI JS
 MAINTAINER:=Rafał Wabik <4Rafal@gmail.com>
 LUCI_DESCRIPTION:=Super simple graphical configurator for crontab.
 LUCI_DEPENDS:=
-PKG_VERSION:=1.0.1
-PKG_RELEASE:=20250914
+PKG_VERSION:=1.0.2
+PKG_RELEASE:=20250919
 LUCI_PKGARCH:=all
 
 include $(TOPDIR)/feeds/luci/luci.mk

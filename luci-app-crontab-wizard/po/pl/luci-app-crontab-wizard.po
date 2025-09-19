@@ -31,8 +31,8 @@ msgstr "Wygenerowane polecenie cron:"
 msgid "Move to crontab"
 msgstr "Przenieś do crontab"
 
-msgid "Reset all changes made"
-msgstr "Resetuj wszystkie wprowadzone zmiany"
+msgid "Reset changes"
+msgstr "Resetuj zmiany"
 
 msgid "every specified minute period"
 msgstr "co podany okres minut"
@@ -102,3 +102,27 @@ msgstr "Sobota"
 
 msgid "A super simple graphical configurator for crontab."
 msgstr "Bardzo prosty graficzny konfigurator dla crontab."
+
+msgid "Please enter the command"
+msgstr "Proszę podać polecenie"
+
+msgid "Check the cron entry, it must contain (time + command)"
+msgstr "Sprawdź wpis crona, musi zawierać (czas + polecenie)"
+
+msgid "This entry already exists in cron"
+msgstr "Wpis już istnieje w cronie"
+
+msgid "This entry already exists in cron"
+msgstr "Wpis już istnieje w cronie"
+
+msgid "Added entry to cron"
+msgstr "Dodano wpis do crona"
+
+msgid "Error: %s"
+msgstr "Błąd: %s"
+
+msgid "Add to cron"
+msgstr "Dodaj do crona"
+
+msgid "Cron command for copying"
+msgstr "Polecenie cron do skopiowania"
