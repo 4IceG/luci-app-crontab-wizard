@@ -19,4 +19,6 @@ Super simple graphical configurator for crontab.
 
 > Configuration window / Okno konfiguracji:
 
-![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/Crontab_wizard.png?raw=true)
+![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/crontab_wizard_n.png?raw=true)
+
+![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/crontab_wizard_dark.png?raw=true)
