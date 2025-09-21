@@ -40,7 +40,7 @@ msgstr "co podany okres minut"
 msgid "every specified hour period"
 msgstr "co podany okres godzin"
 
-msgid "every specified day"
+msgid "every specified day period"
 msgstr "co podany okres dni"
 
 msgid "January"
@@ -126,3 +126,78 @@ msgstr "Dodaj do crona"
 
 msgid "Cron command for copying"
 msgstr "Polecenie cron do skopiowania"
+
+msgid "from %s to %s (inclusive)"
+msgstr "od %s do %s (włącznie)"
+
+msgid "minute"
+msgstr "minuta"
+
+msgid "minutes"
+msgstr "minut"
+
+msgid "hour"
+msgstr "godzina"
+
+msgid "hours"
+msgstr "godzin"
+
+msgid "day"
+msgstr "dzień"
+
+msgid "days"
+msgstr "dni"
+
+msgid "month"
+msgstr "miesiąc"
+
+msgid "months"
+msgstr "miesięcy"
+
+msgid "at %s"
+msgstr "o %s"
+
+msgid "at: %s"
+msgstr "o godzinach: %s"
+
+msgid "every: %d %s"
+msgstr "co: %d %s"
+
+msgid "in minutes: %s"
+msgstr "w minutach: %s"
+
+msgid "every minute"
+msgstr "co minutę"
+
+msgid "during hours: %s"
+msgstr "w godzinach: %s"
+
+msgid "every: %d %s of the month"
+msgstr "co: %d %s miesiącu(-a)"
+
+msgid "on day(-s): %s"
+msgstr "w dniu(-ach): %s"
+
+msgid "in months: %s"
+msgstr "w miesiącach: %s"
+
+msgid "every: %d day of the week"
+msgstr "każdego: %d dnia tygodnia"
+
+msgid "on day(-s) of the week: %s"
+msgstr "w dniu(-ach) tygodnia: %s"
+
+msgid "or"
+msgstr "lub"
+
+msgid "Command \"%s\" will run"
+msgstr "Polecenie \"%s\" zostanie wykonane"
+
+msgid "Command will run"
+msgstr "Polecenie zostanie wykonane"
+
+msgid "Description:"
+msgstr "Opis:"
+
+msgid ""
+msgstr ""
