@@ -59,10 +59,10 @@ return view.extend({
   },
 
   _formatRange: function(a, b){
-    return _('from %s to %s (inclusive)').format(a, b);
+    return a + '-' + b;
   },
 
-  _parseSegments: function(expr, base /* 0 or 1 */) {
+  _parseSegments: function(expr, base) {
     if (!expr || expr === '*') return { type: 'any' };
     if (/^\*\/\d+$/.test(expr)) return { type: 'step', step: parseInt(expr.slice(2), 10) };
 
@@ -109,7 +109,6 @@ return view.extend({
   _pluralMin:  function(n){ return (n===1) ? _('minute')  : _('minutes'); },
   _pluralHour: function(n){ return (n===1) ? _('hour')    : _('hours');   },
   _pluralDay:  function(n){ return (n===1) ? _('day')     : _('days');    },
-  _pluralMonth:function(n){ return (n===1) ? _('month')   : _('months');  },
 
   _pad2: function(n){ return (n<10 ? '0'+n : ''+n); },
 
@@ -135,30 +134,29 @@ return view.extend({
 
     const times = this._enumerateTimes(minExpr, hourExpr);
     if (times) {
-      if (times.single) return _('at %s').format(times.single);
-      return _('at: %s').format(times.list);
+      if (times.single) return _('at time: %s').format(times.single);
+      return _('at times: %s').format(times.list);
     }
 
-    let minPart = null;
+    let parts = [];
+
+    // Minutes
     if (pm.type==='step') {
-      minPart = _('every %d %s').format(pm.step, this._pluralMin(pm.step));
+      parts.push(_('runs every %d %s').format(pm.step, this._pluralMin(pm.step)));
     } else if (pm.type==='list') {
       const list = this._humanList(pm, function(n){ return String(n); });
-      if (list) minPart = _('in minutes: %s').format(list);
-    } else {
-      if (hourExpr !== '*') minPart = _('every minute');
+      if (list) parts.push(_('in minutes: %s').format(list));
     }
 
-    let hourPart = null;
+    // Hours
     if (ph.type==='step') {
-      hourPart = _('every: %d %s').format(ph.step, this._pluralHour(ph.step));
+      parts.push(_('runs every %d %s').format(ph.step, this._pluralHour(ph.step)));
     } else if (ph.type==='list') {
       const listH = this._humanList(ph, function(n){ return String(n); });
-      if (listH) hourPart = _('during hours: %s').format(listH);
+      if (listH) parts.push(_('in hours: %s').format(listH));
     }
 
-    if (minPart && hourPart) return minPart + ' ' + hourPart;
-    return minPart || hourPart || null;
+    return parts.length > 0 ? parts.join('; ') : null;
   },
 
   _descDayOfMonth: function(expr){
@@ -166,59 +164,70 @@ return view.extend({
     const p = this._parseSegments(expr,1);
 
     if (p.type==='step') {
-      return _('every: %d %s of the month').format(p.step, this._pluralDay(p.step));
-    }
-
-    // Single day vs multiple
-    if (p.type==='list' && p.segs.length===1 && p.segs[0].kind==='single') {
-      return _('on day(-s): %s').format(String(p.segs[0].v));
+      return _('runs every %d %s of the month').format(p.step, this._pluralDay(p.step));
     }
 
     const listStr = this._humanList(p, function(n){ return String(n); });
     if (!listStr) return null;
-    return _('on day(-s): %s').format(listStr);
+    return _('on day(s): %s').format(listStr);
   },
 
   _descMonth: function(expr){
     if (expr === '*') return null;
     const p = this._parseSegments(expr,1);
-    if (p.type==='step') return _('every: %d %s').format(p.step, this._pluralMonth(p.step));
+    if (p.type==='step') return _('runs every %d month(s)').format(p.step);
     const months = this._monthNames();
     const list = this._humanList(p, function(n){ return months[n]; });
-    return _('in months: %s').format(list);
+    return list ? _('in month(s): %s').format(list) : null;
   },
 
   _descWeekday: function(expr){
     if (expr === '*') return null;
     const p = this._parseSegments(expr,0);
-    if (p.type==='step') return _('every: %d day of the week').format(p.step);
+    if (p.type==='step') return _('runs every %d day of the week').format(p.step);
     const days = this._weekdayNames();
     const list = this._humanList(p, function(n){ return days[n===7?0:n]; });
-    return _('on day(-s) of the week: %s').format(list);
+    return list ? _('on weekday(s): %s').format(list) : null;
   },
 
   _describeCron: function(minute, hour, day, month, weekday, command){
     const parts = [];
 
+    const isMinuteChanged = minute !== '*';
+    const isHourChanged = hour !== '*';
+    const isDayChanged = day !== '*';
+    const isMonthChanged = month !== '*';
+    const isWeekdayChanged = weekday !== '*';
+
+    // Nothing changed
+    if (!isMinuteChanged && !isHourChanged && !isDayChanged && !isMonthChanged && !isWeekdayChanged) {
+      const prefix = command ? _('Command "%s" ').format(command) : _('Command');
+      return prefix + ' ';
+    }
+
+    // Time (hour and minute)
     const timePart = this._timeOfDayPhrase(minute, hour);
     if (timePart) parts.push(timePart);
 
+    // Month
     const monthPart = this._descMonth(month);
     if (monthPart) parts.push(monthPart);
 
+    // Day of month
     const dayPart = this._descDayOfMonth(day);
+    if (dayPart) parts.push(dayPart);
+
+    // Day of week
     const weekdayPart = this._descWeekday(weekday);
-    if (dayPart && weekdayPart) {
-      parts.push(dayPart + ' ' + _('or') + ' ' + weekdayPart);
-    } else {
-      if (dayPart) parts.push(dayPart);
-      if (weekdayPart) parts.push(weekdayPart);
-    }
+    if (weekdayPart) parts.push(weekdayPart);
 
     const prefix = command ? _('Command "%s" will run').format(command) : _('Command will run');
-    if (parts.length === 0)
-      return prefix + ' ' + _('');
-    return prefix + ' ' + parts.join(', ') + '.';
+    
+    if (parts.length === 0) {
+      return prefix + '.';
+    }
+    
+    return prefix + ' ' + parts.join('; ') + '.';
   },
 
   addStyles: function() {
@@ -252,7 +261,7 @@ return view.extend({
       --badge-border: rgba(0,0,0,.15);
       --badge-shadow: rgba(0,0,0,.06);
 
-      --multiselect-bg: #ffffff;
+      --multiselect-bg: var(--border-color-low);
       --multiselect-text: #263238;
       --multiselect-border: #cfd8dc;
       --multiselect-selected-bg: #e3f2fd;
@@ -281,7 +290,7 @@ return view.extend({
       --badge-border: rgba(255,255,255,.2);
       --badge-shadow: rgba(0,0,0,.35);
 
-      --multiselect-bg: #2a2f34;
+      --multiselect-bg: var(--border-color-low);
       --multiselect-text: #e5e7eb;
       --multiselect-border: #3a4146;
       --multiselect-hover-bg: #3a4146;
@@ -324,6 +333,8 @@ return view.extend({
       height: 40px !important;
       min-height: 40px !important;
       max-height: 40px !important;
+      background-color: var(--multiselect-bg) !important;
+      border: 1px solid var(--badge-border);
       line-height: 26px;
       display: flex;
       align-items: center;
@@ -479,7 +490,8 @@ return view.extend({
     cronHtml += isDayChanged     ? this.badge(colors.day,     day)     : day;     cronHtml += ' ';
     cronHtml += isMonthChanged   ? this.badge(colors.month,   month)   : month;   cronHtml += ' ';
     cronHtml += isWeekdayChanged ? this.badge(colors.weekday, weekday) : weekday; cronHtml += ' ';
-    cronHtml += isCommandChanged ? '<span class="cron-badge" style="background:var(--border-color-medium); color:var(--badge-text)">' + command + '</span>' : command;
+    cronHtml += isCommandChanged ? '<span class="cron-badge" style="background: var(--border-color-medium, var(--border-color-strong)); color:var(--badge-text)">' + command + '</span>'
+  : command
 
     document.getElementById('cron_preview').innerHTML = cronHtml;
 
@@ -677,7 +689,7 @@ return view.extend({
         }),
       ]),
 
-      /* === Human-readable explanation === */
+      // Desc
       E('div', { 'style': 'margin-top:1em;' }, [
         E('label', { 'style': 'font-weight:bold; display:block; margin-bottom:5px;' }, _('Description:')),
         E('textarea', {
