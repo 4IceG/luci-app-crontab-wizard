@@ -23,7 +23,7 @@ Super simple graphical configurator for crontab.
 
 ![](https://github.com/4IceG/Personal_data/blob/master/zrzuty/crontab_wizard_dark.png?raw=true)
 
-### 1.0.3 | <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Design concept / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Koncepcja wyglądu
+### 1.0.4 | <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Design concept / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Koncepcja wyglądu
 
 > Configuration window / Okno konfiguracji:
 
